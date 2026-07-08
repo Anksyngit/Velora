@@ -20,6 +20,7 @@
     "multer-storage-cloudinary": "^4.0.0",
     "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3",
+    "streamifier": "^0.1.1",
     "svix": "^1.89.0",
     "tailwindcss": "^4.2.2"
   },

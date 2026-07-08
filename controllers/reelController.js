@@ -1,23 +1,14 @@
 import Reel from "../models/reels.js";
-
 import cloudinary from "../configs/cloudinary.js";
-
-import fs from "fs";
+import streamifier from "streamifier";
 
 // ==============================
 // CREATE REEL
 // ==============================
 
-export const createReel = async (
-  req,
-  res
-) => {
-
+export const createReel = async (req, res) => {
   try {
-
-    console.log(
-      "🔥 Reel upload started"
-    );
+    console.log("🔥 Reel upload started");
 
     const {
       userId,
@@ -26,139 +17,80 @@ export const createReel = async (
       caption,
     } = req.body;
 
-    const videoFile =
-      req.file;
+    const videoFile = req.file;
 
-    // CHECK VIDEO
     if (!videoFile) {
-
       return res.json({
-
         success: false,
-
-        message:
-          "Video missing",
-
+        message: "Video missing",
       });
-
     }
 
-    console.log(
-      "📹 Uploading to Cloudinary..."
-    );
+    console.log("📹 Uploading reel to Cloudinary...");
 
-    // CLOUDINARY VIDEO UPLOAD
-    const uploadedVideo =
-      await cloudinary.uploader.upload(
-        videoFile.path,
+    const uploadedVideo = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
         {
-
-          resource_type:
-            "video",
-
-          folder:
-            "velora_reels",
-
+          resource_type: "video",
+          folder: "velora_reels",
+        },
+        (error, result) => {
+          if (error) return reject(error);
+          resolve(result);
         }
       );
 
-    console.log(
-      "✅ Cloudinary upload success"
-    );
+      streamifier.createReadStream(videoFile.buffer).pipe(stream);
+    });
 
-    // DELETE LOCAL FILE
-    fs.unlinkSync(
-      videoFile.path
-    );
+    console.log("✅ Cloudinary upload success");
 
-    // SAVE TO DATABASE
-    const reel =
-      await Reel.create({
+    const reel = await Reel.create({
+      userId,
+      username,
+      profile_picture,
+      caption,
+      video: uploadedVideo.secure_url,
+    });
 
-        userId,
-
-        username,
-
-        profile_picture,
-
-        caption,
-
-        video:
-          uploadedVideo.secure_url,
-
-      });
-
-    console.log(
-      "✅ Reel saved to DB"
-    );
+    console.log("✅ Reel saved to DB");
 
     res.json({
-
       success: true,
-
       reel,
-
     });
 
   } catch (error) {
-
-    console.log(
-      "❌ REEL ERROR:",
-      error
-    );
+    console.log("❌ REEL ERROR:", error);
 
     res.json({
-
       success: false,
-
-      message:
-        error.message,
-
+      message: error.message,
     });
-
   }
-
 };
 
 // ==============================
 // GET REELS
 // ==============================
 
-export const getReels = async (
-  req,
-  res
-) => {
-
+export const getReels = async (req, res) => {
   try {
-
-    const reels =
-      await Reel.find().sort({
-
-        createdAt: -1,
-
-      });
+    const reels = await Reel.find().sort({
+      createdAt: -1,
+    });
 
     res.json({
-
       success: true,
-
       reels,
-
     });
 
   } catch (error) {
-
     console.log(error);
 
     res.json({
-
       success: false,
-
-      message:
-        error.message,
-
+      message: error.message,
     });
-
   }
-
 };
