@@ -1,5 +1,6 @@
 import pkg from "cloudinary";
 
+
 const { v2: cloudinary } =
   pkg;
 

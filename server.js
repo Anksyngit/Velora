@@ -1,7 +1,6 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import path from "path";
 
 import { createServer } from "http";
 import { Server } from "socket.io";
@@ -20,7 +19,6 @@ import { clerkMiddleware } from "@clerk/express";
 
 // 🔥 LOAD ENV
 dotenv.config();
-console.log("GROQ:", process.env.GROQ_API_KEY);
 
 const app = express();
 
@@ -64,16 +62,6 @@ app.use(
   })
 );
 
-// STATIC UPLOADS
-app.use(
-  "/uploads",
-  express.static(
-    path.join(
-      process.cwd(),
-      "uploads"
-    )
-  )
-);
 
 // ==============================
 // CLERK
