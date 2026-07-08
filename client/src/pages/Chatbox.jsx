@@ -21,6 +21,7 @@ import { useUser } from "@clerk/clerk-react";
 import toast from "react-hot-toast";
 
 import socket from "../socket";
+const API_URL = import.meta.env.VITE_BACKEND_URL;
 
 const Chatbox = () => {
 
@@ -86,7 +87,7 @@ const Chatbox = () => {
 
         const response =
           await fetch(
-            "http://localhost:4000/api/user/all"
+            `${API_URL}/api/user/all`
           );
 
         const data =
@@ -126,7 +127,7 @@ const Chatbox = () => {
 
           const response =
             await fetch(
-              `http://localhost:4000/api/messages/${user.id}/${userId}`
+              `${API_URL}/api/messages/${user.id}/${userId}`
             );
 
           const data =
@@ -234,7 +235,7 @@ const Chatbox = () => {
 
       const response =
         await fetch(
-          "http://localhost:4000/api/messages/send",
+          `${API_URL}/api/messages/send`,
           {
             method: "POST",
 
@@ -296,7 +297,7 @@ const Chatbox = () => {
 
         const response =
           await fetch(
-            "http://localhost:4000/api/messages/ai-replies",
+            `${API_URL}/api/messages/ai-replies`,
             {
               method: "POST",
 

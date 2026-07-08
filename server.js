@@ -20,6 +20,7 @@ import { clerkMiddleware } from "@clerk/express";
 
 // 🔥 LOAD ENV
 dotenv.config();
+console.log("GROQ:", process.env.GROQ_API_KEY);
 
 const app = express();
 

@@ -1,3 +1,6 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import Message from "../models/message.js";
 import Groq from "groq-sdk";
 
