@@ -42,7 +42,12 @@ app.use(
 // MIDDLEWARES
 // ==============================
 
-app.use(cors());
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL,
+    credentials: true,
+  })
+);
 
 // 🔥 BIG PAYLOAD SUPPORT
 app.use(
@@ -129,20 +134,13 @@ app.use(
 const httpServer =
   createServer(app);
 
-const io = new Server(
-  httpServer,
-  {
-    cors: {
-      origin:
-        "http://localhost:5173",
-
-      methods: [
-        "GET",
-        "POST",
-      ],
-    },
-  }
-);
+const io = new Server(httpServer, {
+  cors: {
+    origin: process.env.FRONTEND_URL,
+    methods: ["GET", "POST"],
+    credentials: true,
+  },
+});
 
 // STORE ONLINE USERS
 const onlineUsers = {};
@@ -239,7 +237,7 @@ io.on(
 // START SERVER
 // ==============================
 
-const PORT = 4000;
+const PORT = process.env.PORT || 4000;
 
 httpServer.listen(
   PORT,
