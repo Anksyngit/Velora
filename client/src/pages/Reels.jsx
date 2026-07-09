@@ -32,7 +32,7 @@ const Reels = () => {
 
         const response =
           await fetch(
-            "http://localhost:4000/api/reels/all"
+            `${import.meta.env.VITE_BACKEND_URL}/api/reels/all`
           );
 
         const data =
@@ -100,7 +100,7 @@ const Reels = () => {
 
         const response =
           await fetch(
-            "http://localhost:4000/api/reels/create",
+            `${import.meta.env.VITE_BACKEND_URL}/api/reels/create`,
             {
               method: "POST",
               body: formData,

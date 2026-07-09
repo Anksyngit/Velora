@@ -29,7 +29,7 @@ const Feed = () => {
 
       const response =
         await axios.get(
-          "http://localhost:4000/api/post"
+          `${import.meta.env.VITE_BACKEND_URL}/api/post`
         );
 
       if (response.data.success) {

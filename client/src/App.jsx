@@ -68,7 +68,7 @@ const App = () => {
             `https://picsum.photos/seed/${user.id}/1200/400`;
 
           await axios.post(
-            "http://localhost:4000/api/user/sync",
+            `${import.meta.env.VITE_BACKEND_URL}/api/user/sync`,
             {
               clerkId:
                 user.id,

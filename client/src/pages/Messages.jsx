@@ -34,7 +34,7 @@ const Messages = () => {
 
           const response =
             await axios.get(
-              "http://localhost:4000/api/user/all"
+              `${import.meta.env.VITE_BACKEND_URL}/api/user/all`
             );
 
           if (

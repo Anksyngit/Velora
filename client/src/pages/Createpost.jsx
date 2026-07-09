@@ -55,7 +55,7 @@ const CreatePost = () => {
       });
 
       const res = await axios.post(
-        "http://localhost:4000/api/post/create",
+        `${import.meta.env.VITE_BACKEND_URL}/api/post/create`,
         formData,
         {
           headers: {

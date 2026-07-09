@@ -28,7 +28,7 @@ const PostCard = ({
     useUser();
 
   const BASE_URL =
-    "http://localhost:4000";
+    import.meta.env.VITE_BACKEND_URL;
 
   const images =
     post.image_urls || [];
