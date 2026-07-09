@@ -1,4 +1,4 @@
-import velora from './velora.svg'
+import velora from './Velora.svg'
 import sample_cover from './sample_cover.jpg'
 import sample_profile from './sample_profile.jpg'
 import bgImage from './bgImage.png'
