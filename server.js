@@ -41,9 +41,22 @@ app.use(
 // MIDDLEWARES
 // ==============================
 
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  "http://localhost:5173",
+];
+
+const corsOriginHandler = function (origin, callback) {
+  if (!origin || allowedOrigins.includes(origin)) {
+    callback(null, true);
+  } else {
+    callback(new Error("Not allowed by CORS"));
+  }
+};
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL,
+    origin: corsOriginHandler,
     credentials: true,
   })
 );
@@ -125,7 +138,7 @@ const httpServer =
 
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.FRONTEND_URL,
+    origin: corsOriginHandler,
     methods: ["GET", "POST"],
     credentials: true,
   },
