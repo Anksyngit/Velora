@@ -2,7 +2,7 @@ import React, { useState, useRef } from "react";
 import { ImagePlus, X } from "lucide-react";
 import toast from "react-hot-toast";
 import axios from "axios";
-import { useUser } from "@clerk/clerk-react";
+import { useUser, useAuth } from "@clerk/clerk-react";
 
 const CreatePost = () => {
   const [content, setContent] = useState("");
@@ -12,6 +12,7 @@ const CreatePost = () => {
   const fileInputRef = useRef(null);
 
   const { user } = useUser();
+  const { getToken } = useAuth();
 
   // ✅ Handle image selection
   const handleImageChange = (e) => {
@@ -45,6 +46,8 @@ const CreatePost = () => {
     try {
       setLoading(true);
 
+      const token = await getToken();
+
       const formData = new FormData();
 
       formData.append("content", content);
@@ -60,6 +63,7 @@ const CreatePost = () => {
         {
           headers: {
             "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
           },
         }
       );
