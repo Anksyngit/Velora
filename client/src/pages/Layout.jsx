@@ -13,7 +13,7 @@ const Layout = () => {
     return user ?(
         <div className="w-full flex h-screen">
 
-            <Sidebar sidebarOpen={sidebarOpen} setSideBarOpen={setSideBarOpen} />
+            <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSideBarOpen} />
 
             <div className="flex-1 bg-slate-50">
                 <Outlet />

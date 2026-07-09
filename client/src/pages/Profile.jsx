@@ -73,7 +73,7 @@ const Profile = () => {
         // FETCH POSTS
         const postResponse =
           await axios.get(
-            `http://localhost:4000/api/post/user/${targetId}`
+            `${import.meta.env.VITE_BACKEND_URL}/api/post/user/${targetId}`
           );
 
         if (
