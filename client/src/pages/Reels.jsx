@@ -167,6 +167,7 @@ const Reels = () => {
         />
 
         <button
+          type="button"
           onClick={uploadReel}
           disabled={loading}
           className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg"

@@ -8,7 +8,15 @@ import cloudinary from "../configs/cloudinary.js";
 
 export const createPost = async (req, res) => {
   try {
-    const clerkId = req.auth?.userId;
+    const authData = await req.auth();
+const clerkId = authData?.userId;
+
+if (!clerkId) {
+  return res.status(401).json({
+    success: false,
+    message: "Unauthorized",
+  });
+}
 
     if (!clerkId) {
       return res.status(401).json({
