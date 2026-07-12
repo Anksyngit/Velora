@@ -8,11 +8,15 @@ import { Server } from "socket.io";
 import connectDB from "./configs/db.js";
 
 // ✅ Routes
+import commentRoutes from "./routes/commentRoutes.js";
 import userRouter from "./routes/userRoutes.js";
 import postRoutes from "./routes/postRoutes.js";
 import webhookRouter from "./routes/webhookRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
 import reelRoutes from "./routes/reelRoutes.js";
+import storyRoutes from "./routes/storyRoutes.js";
+import uploadRoutes from "./routes/uploadRoutes.js"; // ✅ NEW
+import notificationRoutes from "./routes/notificationRoutes.js";
 
 // ✅ Clerk
 import { clerkMiddleware } from "@clerk/express";
@@ -75,20 +79,14 @@ app.use(
   })
 );
 
-
 // ==============================
 // CLERK
 // ==============================
 
 app.use(
   clerkMiddleware({
-    publishableKey:
-      process.env
-        .CLERK_PUBLISHABLE_KEY,
-
-    secretKey:
-      process.env
-        .CLERK_SECRET_KEY,
+    publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
+    secretKey: process.env.CLERK_SECRET_KEY,
   })
 );
 
@@ -97,11 +95,7 @@ app.use(
 // ==============================
 
 app.get("/", (req, res) => {
-
-  res.send(
-    "Server running 🚀"
-  );
-
+  res.send("Server running 🚀");
 });
 
 // ==============================
@@ -129,12 +123,36 @@ app.use(
   reelRoutes
 );
 
+// ✅ STORIES
+app.use(
+  "/api/story",
+  storyRoutes
+);
+
+// ✅ IMAGE UPLOADS
+app.use(
+  "/api/upload",
+  uploadRoutes
+);
+
+app.use(
+
+  "/api/notifications",
+
+  notificationRoutes
+
+);
+
+app.use(
+  "/api/comments",
+  commentRoutes
+);
+
 // ==============================
 // SOCKET.IO
 // ==============================
 
-const httpServer =
-  createServer(app);
+const httpServer = createServer(app);
 
 const io = new Server(httpServer, {
   cors: {
@@ -148,92 +166,57 @@ const io = new Server(httpServer, {
 const onlineUsers = {};
 
 // SOCKET CONNECTION
-io.on(
-  "connection",
-  (socket) => {
+io.on("connection", (socket) => {
 
-    console.log(
-      "✅ User connected:",
-      socket.id
-    );
+  console.log("✅ User connected:", socket.id);
 
-    // JOIN USER
-    socket.on(
-      "join",
-      (userId) => {
+  // JOIN USER
+  socket.on("join", (userId) => {
 
-        onlineUsers[userId] =
-          socket.id;
+    onlineUsers[userId] = socket.id;
 
-        console.log(
-          "ONLINE USERS:",
-          onlineUsers
-        );
+    console.log("ONLINE USERS:", onlineUsers);
 
-      }
-    );
+  });
 
-    // SEND MESSAGE
-    socket.on(
-      "sendMessage",
-      (messageData) => {
+  // SEND MESSAGE
+  socket.on("sendMessage", (messageData) => {
 
-        const receiverSocketId =
-          onlineUsers[
-            messageData.receiverId
-          ];
+    const receiverSocketId =
+      onlineUsers[messageData.receiverId];
 
-        if (
-          receiverSocketId
-        ) {
+    if (receiverSocketId) {
 
-          io.to(
-            receiverSocketId
-          ).emit(
-            "receiveMessage",
-            messageData
-          );
+      io.to(receiverSocketId).emit(
+        "receiveMessage",
+        messageData
+      );
 
-        }
+    }
+
+    io.emit("messagesUpdated");
+
+  });
+
+  // DISCONNECT
+  socket.on("disconnect", () => {
+
+    console.log("❌ User disconnected");
+
+    for (const userId in onlineUsers) {
+
+      if (onlineUsers[userId] === socket.id) {
+
+        delete onlineUsers[userId];
+        break;
 
       }
-    );
 
-    // DISCONNECT
-    socket.on(
-      "disconnect",
-      () => {
+    }
 
-        console.log(
-          "❌ User disconnected"
-        );
+  });
 
-        for (
-          const userId
-          in onlineUsers
-        ) {
-
-          if (
-            onlineUsers[
-              userId
-            ] === socket.id
-          ) {
-
-            delete onlineUsers[
-              userId
-            ];
-
-            break;
-
-          }
-
-        }
-
-      }
-    );
-
-  }
-);
+});
 
 // ==============================
 // START SERVER
@@ -241,13 +224,8 @@ io.on(
 
 const PORT = process.env.PORT || 4000;
 
-httpServer.listen(
-  PORT,
-  () => {
+httpServer.listen(PORT, () => {
 
-    console.log(
-      `🚀 Server running on port ${PORT}`
-    );
+  console.log(`🚀 Server running on port ${PORT}`);
 
-  }
-);
+});

@@ -1,7 +1,13 @@
 import React, { useState } from "react"
 import { X } from "lucide-react"
+import axios from "axios";
+import { useAuth } from "@clerk/clerk-react";
 
 const ProfileModal = ({ user, onClose, onSave }) => {
+    const { getToken } = useAuth();
+
+    const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
     const [formData, setFormData] = useState({
         full_name: user.full_name || '',
         username: user.username || '',
@@ -16,20 +22,135 @@ const ProfileModal = ({ user, onClose, onSave }) => {
         setFormData({ ...formData, [e.target.name]: e.target.value })
     }
 
-    const handleProfilePicChange = (e) => {
-        const file = e.target.files[0]
-        if (file) setProfilePicPreview(URL.createObjectURL(file))
-    }
+    const handleProfilePicChange = async (e) => {
 
-    const handleCoverChange = (e) => {
-        const file = e.target.files[0]
-        if (file) setCoverPhotoPreview(URL.createObjectURL(file))
-    }
+        console.log("1. handleProfilePicChange");
 
-    const handleSave = () => {
-        onSave({ ...formData, profile_picture: profilePicPreview, cover_photo: coverPhotoPreview })
-        onClose()
-    }
+        const file = e.target.files[0];
+
+        console.log("2. File =", file);
+
+        if (!file) return;
+
+        try {
+
+            console.log("3. Creating FormData");
+
+            const formData = new FormData();
+            formData.append("image", file);
+
+            console.log("4. Getting token");
+
+            const token = await getToken();
+
+            console.log("5. Token =", token);
+
+            console.log("6. About to call axios");
+
+            const response = await axios.post(
+                `${BACKEND_URL}/api/upload/image`,
+                formData,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            console.log("7. RESPONSE =", response.data);
+
+            if (response.data.success) {
+
+                console.log("8. Setting preview");
+
+                setProfilePicPreview(response.data.url);
+
+            }
+
+        } catch (err) {
+
+            console.log("XXXXXXXX ERROR XXXXXXXX");
+
+            console.log(err);
+
+            console.log(err.response);
+
+            console.log(err.response?.data);
+
+        }
+
+    };
+
+    const handleCoverChange = async (e) => {
+
+        const file = e.target.files[0];
+
+        if (!file) return;
+
+        try {
+
+            const formData = new FormData();
+
+            formData.append("image", file);
+
+            console.log("Getting token...");
+
+            const token = await getToken();
+
+            console.log("TOKEN =", token);
+
+            console.log("Uploading...");
+
+            const { data } = await axios.post(
+
+                `${BACKEND_URL}/api/upload/image`,
+
+                formData,
+
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "multipart/form-data",
+                    },
+                }
+
+            );
+
+            if (data.success) {
+
+                setCoverPhotoPreview(data.url);
+
+            }
+
+        } catch (err) {
+
+            console.log("UPLOAD FAILED");
+
+            console.log(err);
+
+            console.log(err.response);
+
+            console.log(err.response?.data);
+
+        }
+
+    };
+
+    const handleSave = async () => {
+
+        console.log("SAVE BUTTON CLICKED");
+
+        await onSave({
+            ...formData,
+            profile_picture: profilePicPreview,
+            cover_photo: coverPhotoPreview,
+        });
+
+        console.log("ONSAVE FINISHED");
+
+        onClose();
+
+    };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">

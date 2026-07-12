@@ -1,33 +1,36 @@
-import React, {useState} from "react"
-import Sidebar from "../components/Sidebar"
-import { Outlet } from "react-router-dom"
-import {Menu, X} from 'lucide-react'
-import { dummyUserData} from "../assets/assets"
-import Loading from "../components/Loading"
+import React, { useState } from "react";
+import Sidebar from "../components/Sidebar";
+import { Outlet } from "react-router-dom";
+import { Menu, X } from "lucide-react";
 
 const Layout = () => {
+  const [sidebarOpen, setSideBarOpen] = useState(false);
 
-        const[sidebarOpen, setSideBarOpen] = useState(false)
-        const user = dummyUserData
+  return (
+    <div className="w-full flex h-screen">
 
-    return user ?(
-        <div className="w-full flex h-screen">
+      <Sidebar
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSideBarOpen}
+      />
 
-            <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSideBarOpen} />
+      <div className="flex-1 bg-slate-50">
+        <Outlet />
+      </div>
 
-            <div className="flex-1 bg-slate-50">
-                <Outlet />
-            </div>
-          {
-            sidebarOpen ?
-            < X className="absolute top-3 right-3 p-2 z-50 bg-white rounded-md shadow w-10 h-10 text-gray-600 sm:hidden" onClick={()=> setSideBarOpen(false)}/>
-            :
-            <Menu className="absolute top-3 right-3 p-2 z-50 bg-white rounded-md shadow w-10 h-10 text-gray-600 sm:hidden" onClick={()=> setSideBarOpen(true)}/>
-          }
-        </div>
-    ) : (
-        <Loading /> 
-    )
-}
+      {sidebarOpen ? (
+        <X
+          className="absolute top-3 right-3 p-2 z-50 bg-white rounded-md shadow w-10 h-10 text-gray-600 sm:hidden"
+          onClick={() => setSideBarOpen(false)}
+        />
+      ) : (
+        <Menu
+          className="absolute top-3 right-3 p-2 z-50 bg-white rounded-md shadow w-10 h-10 text-gray-600 sm:hidden"
+          onClick={() => setSideBarOpen(true)}
+        />
+      )}
+    </div>
+  );
+};
 
-export default Layout
+export default Layout;

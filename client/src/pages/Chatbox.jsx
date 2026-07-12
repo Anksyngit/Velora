@@ -4,6 +4,8 @@ import React, {
   useEffect,
 } from "react";
 
+import axios from "axios";
+
 import {
   useParams,
 } from "react-router-dom";
@@ -120,37 +122,49 @@ const Chatbox = () => {
   // LOAD OLD MESSAGES
   useEffect(() => {
 
-    const fetchMessages =
-      async () => {
+    const fetchMessages = async () => {
 
-        try {
+      try {
 
-          const response =
-            await fetch(
-              `${API_URL}/api/messages/${user.id}/${userId}`
-            );
+        const response = await fetch(
+          `${API_URL}/api/messages/${user.id}/${userId}`
+        );
 
-          const data =
-            await response.json();
+        const data = await response.json();
 
-          if (data.success) {
+        if (data.success) {
 
-            setMessages(
-              data.messages
-            );
-
-          }
-
-        } catch (error) {
-
-          console.log(error);
+          setMessages(data.messages);
 
         }
 
-      };
+        // MARK ALL RECEIVED MESSAGES AS READ
+        if (userId !== "ai-bot") {
+
+          await axios.post(
+            `${API_URL}/api/messages/read`,
+            {
+              senderId: userId,
+              receiverId: user.id,
+            }
+          );
+
+          socket.emit("messagesUpdated");
+
+        }
+
+      } catch (error) {
+
+        console.log(error);
+
+      }
+
+    };
 
     if (user && userId) {
+
       fetchMessages();
+
     }
 
   }, [user, userId]);

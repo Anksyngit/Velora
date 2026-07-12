@@ -2,6 +2,7 @@ import express from "express";
 
 import Post from "../models/post.js";
 import User from "../models/user.js";
+import Notification from "../models/notification.js";
 import upload from "../configs/multer.js";
 import { createPost, getAllPosts, getUserPosts } from "../controllers/postController.js";
 
@@ -45,6 +46,43 @@ router.post("/like", async (req, res) => {
     if (!post.likes.includes(user._id)) {
       post.likes.push(user._id);
       await post.save();
+
+      console.log("===== LIKE PRESSED =====");
+
+      console.log("POST OWNER:", post.user);
+
+      console.log("LIKED BY:", user.full_name);
+
+      console.log("POST ID:", post._id);
+
+      // DON'T NOTIFY YOURSELF
+      if (post.user.toString() !== user._id.toString()) {
+
+        const receiver = await User.findById(post.user);
+
+        console.log("Creating notification...");
+
+        await Notification.create({
+
+          receiverId: receiver.clerkId,
+
+          senderId: user.clerkId,
+
+          senderName: user.full_name,
+
+          senderProfile: user.profile_picture,
+
+          type: "LIKE",
+
+          postId: post._id,
+
+          message: `${user.full_name} liked your post.`
+
+        });
+
+        console.log("Notification created!");
+
+      }
     }
 
     res.json({ success: true });

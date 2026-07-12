@@ -13,77 +13,73 @@ import {
 
 import { useNavigate } from "react-router-dom";
 
-import { useUser } from "@clerk/clerk-react";
+import {
+  useUser,
+  useAuth,
+} from "@clerk/clerk-react";
+
+import socket from "../socket";
 
 const Messages = () => {
 
   const navigate = useNavigate();
 
   const { user } = useUser();
+  const { getToken } = useAuth();
 
-  const [users, setUsers] =
-    useState([]);
+  const [conversations, setConversations] = useState([]);
 
-  // FETCH USERS
+  const fetchConversations = async () => {
+
+    if (!user) return;
+
+    try {
+
+      const response = await axios.get(
+        `${import.meta.env.VITE_BACKEND_URL}/api/messages/conversations/${user.id}`
+      );
+
+      if (response.data.success) {
+
+        setConversations(response.data.conversations || []);
+
+      } else {
+
+        console.log("Backend Response:", response.data);
+
+        setConversations([]);
+
+      }
+
+    } catch (error) {
+
+      console.log(error);
+
+    }
+
+  };
+
+  // FETCH CONVERSATIONS
   useEffect(() => {
 
-    const fetchUsers =
-      async () => {
+    fetchConversations();
 
-        try {
+  }, [user]);
 
-          const response =
-            await axios.get(
-              `${import.meta.env.VITE_BACKEND_URL}/api/user/all`
-            );
+  // LIVE REFRESH ON NEW MESSAGE
+  useEffect(() => {
 
-          if (
-            response.data.success
-          ) {
+    socket.on("receiveMessage", () => {
 
-            const filteredUsers =
-              response.data.users.filter(
-                (u) =>
-                  u.clerkId !==
-                  user.id
-              );
+      fetchConversations();
 
-            // ADD AI BOT
-            const aiBot = {
+    });
 
-              _id: "ai-bot",
+    return () => {
 
-              clerkId: "ai-bot",
+      socket.off("receiveMessage");
 
-              full_name:
-                "Velora AI",
-
-              email:
-                "AI Assistant",
-
-              profile_picture:
-                "https://api.dicebear.com/7.x/bottts/svg?seed=Velora",
-
-            };
-
-            setUsers([
-              aiBot,
-              ...filteredUsers,
-            ]);
-
-          }
-
-        } catch (error) {
-
-          console.log(error);
-
-        }
-
-      };
-
-    if (user) {
-      fetchUsers();
-    }
+    };
 
   }, [user]);
 
@@ -107,19 +103,21 @@ const Messages = () => {
 
         <div className="flex flex-col gap-3">
 
-          {users.map(
-            (userItem) => (
+          {conversations.map((chat) => {
+
+            const userItem = chat.user;
+
+            return (
 
               <div
-                key={userItem._id}
+                key={userItem._id || userItem.clerkId}
                 className="max-w-xl flex flex-wrap gap-5 p-6 bg-white shadow rounded-md"
               >
 
                 <img
-                  src={
-                    userItem.profile_picture
-                  }
+                  src={userItem.profile_picture}
                   className="rounded-full size-12 mx-auto"
+                  alt=""
                 />
 
                 <div className="flex-1">
@@ -127,25 +125,48 @@ const Messages = () => {
                   <div className="flex items-center gap-2">
 
                     <p className="font-medium text-slate-700">
-                      {
-                        userItem.full_name
-                      }
+                      {userItem.full_name}
                     </p>
 
-                    {
-                      userItem.clerkId ===
-                        "ai-bot" && (
-
-                        <Bot className="w-4 h-4 text-purple-500" />
-
-                      )
-                    }
+                    {userItem.clerkId === "ai-bot" && (
+                      <Bot className="w-4 h-4 text-purple-500" />
+                    )}
 
                   </div>
 
-                  <p className="text-slate-500 text-sm">
-                    {userItem.email}
+                  <p className="text-slate-500 text-sm truncate">
+
+                    {chat.lastMessage || "No messages"}
+
                   </p>
+
+                </div>
+
+                <div className="flex flex-col items-end gap-2">
+
+                  <p className="text-xs text-gray-400">
+
+                    {new Date(chat.lastMessageTime)
+                      .toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+
+                  </p>
+
+                  {
+
+                    chat.unreadCount > 0 && (
+
+                      <span className="min-w-6 h-6 px-2 flex items-center justify-center rounded-full bg-red-500 text-white text-xs font-semibold">
+
+                        {chat.unreadCount}
+
+                      </span>
+
+                    )
+
+                  }
 
                 </div>
 
@@ -159,37 +180,31 @@ const Messages = () => {
                     }
                     className="size-10 flex items-center justify-center text-sm rounded bg-slate-100 hover:bg-slate-200 text-slate-800"
                   >
-
                     <MessageSquare className="w-4 h-4" />
-
                   </button>
 
-                  {
-                    userItem.clerkId !==
-                      "ai-bot" && (
+                  {userItem.clerkId !== "ai-bot" && (
 
-                      <button
-                        onClick={() =>
-                          navigate(
-                            `/profile/${userItem.clerkId}`
-                          )
-                        }
-                        className="size-10 flex items-center justify-center text-sm rounded bg-slate-100 hover:bg-slate-200 text-slate-800"
-                      >
+                    <button
+                      onClick={() =>
+                        navigate(
+                          `/profile/${userItem.clerkId}`
+                        )
+                      }
+                      className="size-10 flex items-center justify-center text-sm rounded bg-slate-100 hover:bg-slate-200 text-slate-800"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
 
-                        <Eye className="w-4 h-4" />
-
-                      </button>
-
-                    )
-                  }
+                  )}
 
                 </div>
 
               </div>
 
-            )
-          )}
+            );
+
+          })}
 
         </div>
 

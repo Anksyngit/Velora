@@ -4,6 +4,8 @@ import {
   sendMessage,
   getMessages,
   getAiReplies,
+  getConversations,
+  markMessagesRead,
 } from "../controllers/messageController.js";
 
 const router = express.Router();
@@ -14,10 +16,22 @@ router.post(
   sendMessage
 );
 
+// GET CONVERSATIONS
+router.get(
+  "/conversations/:userId",
+  getConversations
+);
+
 // GET MESSAGES
 router.get(
   "/:senderId/:receiverId",
   getMessages
+);
+
+// MARK AS READ
+router.post(
+  "/read",
+  markMessagesRead
 );
 
 // AI REPLIES

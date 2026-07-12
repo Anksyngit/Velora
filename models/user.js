@@ -23,6 +23,11 @@ const userSchema = new mongoose.Schema(
       unique: true,
     },
 
+    profileCompleted: {
+      type: Boolean,
+      default: false,
+    },
+
     bio: {
       type: String,
       default: "Hey There! I am using Velora.",

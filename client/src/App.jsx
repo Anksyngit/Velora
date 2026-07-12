@@ -1,3 +1,4 @@
+import Setup from "./pages/Setup";
 import React, {
   useEffect,
 } from "react";
@@ -5,6 +6,8 @@ import React, {
 import {
   Route,
   Routes,
+  useNavigate,
+  useLocation,
 } from "react-router-dom";
 
 import axios from "axios";
@@ -38,6 +41,8 @@ const App = () => {
     isLoaded,
   } = useUser();
 
+  const navigate = useNavigate();
+  const location = useLocation();
   // ============================
   // USER SYNC
   // ============================
@@ -54,12 +59,7 @@ const App = () => {
           const profilePicture =
             user.imageUrl;
 
-          const username =
-            user.username ||
-            user
-              .primaryEmailAddress
-              ?.emailAddress
-              ?.split("@")[0];
+          
 
           const bio =
             "Hey There! I am using Velora.";
@@ -67,34 +67,31 @@ const App = () => {
           const banner =
             `https://picsum.photos/seed/${user.id}/1200/400`;
 
-          await axios.post(
+
+
+          const response = await axios.post(
             `${import.meta.env.VITE_BACKEND_URL}/api/user/sync`,
             {
-              clerkId:
-                user.id,
-
-              email:
-                user
-                  .primaryEmailAddress
-                  ?.emailAddress,
-
-              full_name:
-                user.fullName,
-
-              username,
-
+              clerkId: user.id,
+              email: user.primaryEmailAddress?.emailAddress,
+              full_name: user.fullName,
               bio,
-
               banner,
-
-              profile_picture:
-                profilePicture,
+              profile_picture: profilePicture,
             }
           );
 
-          console.log(
-            "✅ User synced"
-          );
+          console.log("✅ User synced", response.data);
+
+          if (!response.data.profileCompleted) {
+            if (location.pathname !== "/setup") {
+              navigate("/setup");
+            }
+          } else {
+            if (location.pathname === "/setup") {
+              navigate("/");
+            }
+          }
 
           // SOCKET JOIN
           socket.emit(
@@ -121,7 +118,7 @@ const App = () => {
 
     }
 
-  }, [user, isLoaded]);
+  }, [user, isLoaded, navigate, location.pathname]);
 
   // ============================
   // LOADING
@@ -152,6 +149,11 @@ const App = () => {
 
       <Routes>
 
+      {/* Setup Page */}
+      <Route
+        path="/setup"
+        element={!user ? <Login /> : <Setup />}
+      />
         <Route
           path="/"
           element={

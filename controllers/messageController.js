@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import Message from "../models/message.js";
+import User from "../models/user.js";
 import Groq from "groq-sdk";
 
 const groq = new Groq({
@@ -31,6 +32,7 @@ export const sendMessage = async (
         senderId,
         receiverId,
         text,
+        read: false,
       });
 
     // ==========================
@@ -90,6 +92,8 @@ Rules:
           receiverId: senderId,
 
           text: aiReply,
+
+          read: false,
 
         });
 
@@ -273,6 +277,182 @@ Rules:
       success: false,
 
       message: "AI failed",
+
+    });
+
+  }
+
+};
+
+// ==============================
+// GET CONVERSATIONS
+// ==============================
+
+export const getConversations = async (req, res) => {
+  try {
+
+    const { userId } = req.params;
+
+    const messages = await Message.find({
+      $or: [
+        { senderId: userId },
+        { receiverId: userId },
+      ],
+    }).sort({ createdAt: -1 });
+
+    const conversationMap = {};
+
+    for (const msg of messages) {
+
+      const otherUserId =
+        msg.senderId === userId
+          ? msg.receiverId
+          : msg.senderId;
+
+      // Skip duplicate conversations
+      if (conversationMap[otherUserId]) continue;
+
+      // Ignore AI here (we'll add separately)
+      if (otherUserId !== "ai-bot") {
+
+        const user = await User.findOne({
+          clerkId: otherUserId,
+        });
+
+        if (!user) continue;
+
+        const unreadCount =
+          await Message.countDocuments({
+
+            senderId: otherUserId,
+
+            receiverId: userId,
+
+            read: false,
+
+          });
+
+        conversationMap[otherUserId] = {
+
+          user,
+
+          lastMessage: msg.text,
+
+          lastMessageTime: msg.createdAt,
+
+          unreadCount,
+
+        };
+
+      } else {
+
+        conversationMap["ai-bot"] = {
+
+          user: {
+
+            clerkId: "ai-bot",
+
+            full_name: "Velora AI",
+
+            email: "AI Assistant",
+
+            profile_picture:
+              "https://api.dicebear.com/7.x/bottts/svg?seed=Velora",
+
+          },
+
+          lastMessage: msg.text,
+
+          lastMessageTime: msg.createdAt,
+
+          unreadCount: 0,
+
+        };
+
+      }
+
+    }
+
+    res.json({
+
+      success: true,
+
+      conversations:
+        Object.values(conversationMap),
+
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    res.json({
+
+      success: false,
+
+      message: error.message,
+
+    });
+
+  }
+
+};
+
+// ==============================
+// MARK AS READ
+// ==============================
+
+export const markMessagesRead = async (
+  req,
+  res
+) => {
+
+  try {
+
+    const {
+      senderId,
+      receiverId,
+    } = req.body;
+
+    await Message.updateMany(
+
+      {
+
+        senderId,
+
+        receiverId,
+
+        read: false,
+
+      },
+
+      {
+
+        $set: {
+
+          read: true,
+
+        },
+
+      }
+
+    );
+
+    res.json({
+
+      success: true,
+
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    res.json({
+
+      success: false,
+
+      message: error.message,
 
     });
 
