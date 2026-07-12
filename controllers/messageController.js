@@ -289,100 +289,132 @@ Rules:
 // ==============================
 
 export const getConversations = async (req, res) => {
+
   try {
 
     const { userId } = req.params;
 
-    const messages = await Message.find({
-      $or: [
-        { senderId: userId },
-        { receiverId: userId },
-      ],
-    }).sort({ createdAt: -1 });
+    // Logged in user
+    const currentUser = await User.findOne({
+      clerkId: userId,
+    }).populate("connections");
 
-    const conversationMap = {};
+    if (!currentUser) {
 
-    for (const msg of messages) {
-
-      const otherUserId =
-        msg.senderId === userId
-          ? msg.receiverId
-          : msg.senderId;
-
-      // Skip duplicate conversations
-      if (conversationMap[otherUserId]) continue;
-
-      // Ignore AI here (we'll add separately)
-      if (otherUserId !== "ai-bot") {
-
-        const user = await User.findOne({
-          clerkId: otherUserId,
-        });
-
-        if (!user) continue;
-
-        const unreadCount =
-          await Message.countDocuments({
-
-            senderId: otherUserId,
-
-            receiverId: userId,
-
-            read: false,
-
-          });
-
-        conversationMap[otherUserId] = {
-
-          user,
-
-          lastMessage: msg.text,
-
-          lastMessageTime: msg.createdAt,
-
-          unreadCount,
-
-        };
-
-      } else {
-
-        conversationMap["ai-bot"] = {
-
-          user: {
-
-            clerkId: "ai-bot",
-
-            full_name: "Velora AI",
-
-            email: "AI Assistant",
-
-            profile_picture:
-              "https://api.dicebear.com/7.x/bottts/svg?seed=Velora",
-
-          },
-
-          lastMessage: msg.text,
-
-          lastMessageTime: msg.createdAt,
-
-          unreadCount: 0,
-
-        };
-
-      }
+      return res.json({
+        success: false,
+        message: "User not found",
+      });
 
     }
+
+    const conversations = [];
+
+    // ============================
+    // CONNECTED USERS
+    // ============================
+
+    for (const connection of currentUser.connections) {
+
+      const lastMessage = await Message.findOne({
+
+        $or: [
+
+          {
+            senderId: userId,
+            receiverId: connection.clerkId,
+          },
+
+          {
+            senderId: connection.clerkId,
+            receiverId: userId,
+          },
+
+        ],
+
+      }).sort({
+
+        createdAt: -1,
+
+      });
+
+      const unreadCount = await Message.countDocuments({
+
+        senderId: connection.clerkId,
+
+        receiverId: userId,
+
+        read: false,
+
+      });
+
+      conversations.push({
+
+        user: connection,
+
+        lastMessage: lastMessage
+          ? lastMessage.text
+          : "Start chatting...",
+
+        lastMessageTime: lastMessage
+          ? lastMessage.createdAt
+          : connection.createdAt,
+
+        unreadCount,
+
+      });
+
+    }
+
+    // ============================
+    // AI BOT
+    // ============================
+
+    conversations.push({
+
+      user: {
+
+        clerkId: "ai-bot",
+
+        full_name: "Velora AI",
+
+        email: "AI Assistant",
+
+        profile_picture:
+          "https://api.dicebear.com/7.x/bottts/svg?seed=Velora",
+
+      },
+
+      lastMessage: "Need help with something?",
+
+      lastMessageTime: new Date(),
+
+      unreadCount: 0,
+
+    });
+
+    // Newest first
+    conversations.sort(
+
+      (a, b) =>
+
+        new Date(b.lastMessageTime) -
+
+        new Date(a.lastMessageTime)
+
+    );
 
     res.json({
 
       success: true,
 
-      conversations:
-        Object.values(conversationMap),
+      conversations,
 
     });
 
-  } catch (error) {
+  }
+
+  catch (error) {
 
     console.log(error);
 
