@@ -14,7 +14,11 @@ import {
   Send,
   Sparkles,
   Bot,
+  Smile,
 } from "lucide-react";
+
+import data from "@emoji-mart/data";
+import Picker from "@emoji-mart/react";
 
 import moment from "moment";
 
@@ -48,6 +52,9 @@ const Chatbox = () => {
     useState(false);
 
   const [typingAi, setTypingAi] =
+    useState(false);
+
+  const [showEmojiPicker, setShowEmojiPicker] =
     useState(false);
 
   const bottomRef = useRef(null);
@@ -238,6 +245,7 @@ const Chatbox = () => {
       input;
 
     setInput("");
+    setShowEmojiPicker(false);
 
     try {
 
@@ -351,6 +359,15 @@ const Chatbox = () => {
       }
 
     };
+
+  // EMOJI SELECT
+  const addEmoji = (emoji) => {
+
+    setInput((prev) => prev + emoji.native);
+
+    setShowEmojiPicker(false);
+
+  };
 
   // ENTER KEY SEND
   const handleKeyUp = (e) => {
@@ -530,7 +547,24 @@ const Chatbox = () => {
       </div>
 
       {/* INPUT */}
-      <div className="px-6 py-4 bg-white border-t border-gray-200">
+      <div className="relative px-6 py-4 bg-white border-t border-gray-200">
+
+        {/* EMOJI PICKER */}
+        {
+          showEmojiPicker && (
+
+            <div className="absolute bottom-16 right-4 z-50">
+
+              <Picker
+                data={data}
+                onEmojiSelect={addEmoji}
+                theme="light"
+              />
+
+            </div>
+
+          )
+        }
 
         {/* AI SUGGESTIONS */}
         {
@@ -580,6 +614,14 @@ const Chatbox = () => {
             }
             onKeyUp={handleKeyUp}
             className="flex-1 bg-transparent text-sm text-gray-700 focus:outline-none"
+          />
+
+          {/* EMOJI BUTTON */}
+          <Smile
+            onClick={() =>
+              setShowEmojiPicker(!showEmojiPicker)
+            }
+            className="w-5 h-5 text-gray-400 cursor-pointer hover:text-indigo-500 transition"
           />
 
           {/* AI BUTTON */}
