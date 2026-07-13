@@ -7,7 +7,12 @@ import axios from "axios";
 
 import moment from "moment";
 
-import { X } from "lucide-react";
+import {
+  X,
+  Heart,
+  MessageCircle,
+  Send,
+} from "lucide-react";
 
 import { useUser } from "@clerk/clerk-react";
 
@@ -27,6 +32,17 @@ const CommentModal = ({
 
   const [text, setText] =
     useState("");
+
+  const emojis = [
+    "😀",
+    "😂",
+    "😍",
+    "❤️",
+    "🔥",
+    "👏",
+    "🥹",
+    "😎",
+  ];
 
   const fetchComments = async () => {
 
@@ -67,34 +83,34 @@ const CommentModal = ({
 
   const handleComment = async () => {
 
-    console.log("POST BUTTON CLICKED");
-    console.log("TEXT:", text);
-    console.log("USER:", user);
-
     if (!text.trim()) return;
 
     try {
 
-      console.log("Sending request...");
-
-      const response = await axios.post(
-        `${BASE_URL}/api/comments/add`,
-        {
-          postId: post._id,
-          clerkId: user.id,
-          text,
-        }
-      );
-
-      console.log(response.data);
+      const response =
+        await axios.post(
+          `${BASE_URL}/api/comments/add`,
+          {
+            postId: post._id,
+            clerkId: user.id,
+            text,
+          }
+        );
 
       if (response.data.success) {
+
         setText("");
+
         fetchComments();
+
       }
 
-    } catch (error) {
+    }
+
+    catch (error) {
+
       console.log(error);
+
     }
 
   };
@@ -103,133 +119,295 @@ const CommentModal = ({
 
   return (
 
-    <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
+    <div className="fixed inset-0 z-50 bg-black/70 flex justify-center items-center p-6">
 
-      <div className="bg-white rounded-xl w-full max-w-lg p-5">
+      <div className="bg-white rounded-2xl overflow-hidden w-full max-w-6xl h-[88vh] flex">
 
-        <div className="flex justify-between items-center mb-5">
+        {/* LEFT */}
 
-          <h2 className="text-xl font-semibold">
-
-            Comments
-
-          </h2>
-
-          <X
-
-            onClick={onClose}
-
-            className="cursor-pointer"
-
-          />
-
-        </div>
-
-        <div className="space-y-4 max-h-[400px] overflow-y-auto">
+        <div className="flex-1 bg-black flex justify-center items-center">
 
           {
 
-            comments.length === 0 && (
+            post.image_urls?.length > 0 ? (
 
-              <p className="text-gray-400 text-center">
+              <img
 
-                No comments yet.
+                src={post.image_urls[0]}
 
-              </p>
+                className="w-full h-full object-contain"
+
+              />
+
+            ) : (
+
+              <div className="text-white text-lg">
+
+                No Image
+
+              </div>
 
             )
 
           }
 
-          {
+        </div>
 
-            comments.map((comment) => (
+        {/* RIGHT */}
 
-              <div
-                key={comment._id}
-                className="flex gap-3"
-              >
+        <div className="w-[420px] flex flex-col">
 
-                <img
+          <div className="flex justify-between items-center border-b p-4">
 
-                  src={
-                    comment.user
-                      ?.profile_picture ||
-                    `https://ui-avatars.com/api/?name=${comment.user?.full_name}`
-                  }
+            <div className="flex items-center gap-3">
 
-                  className="w-10 h-10 rounded-full object-cover"
+              <img
 
-                />
+                src={post.user?.profile_picture}
 
-                <div>
+                className="w-10 h-10 rounded-full object-cover"
 
-                  <p className="font-semibold">
+              />
 
-                    {
+              <div>
 
-                      comment.user
-                        ?.full_name
+                <p className="font-semibold">
 
-                    }
+                  {post.user?.full_name}
 
-                  </p>
+                </p>
 
-                  <p>
+                <p className="text-xs text-gray-500">
 
-                    {comment.text}
+                  {moment(post.createdAt).fromNow()}
 
-                  </p>
+                </p>
 
-                  <p className="text-xs text-gray-400">
+              </div>
 
-                    {
+            </div>
 
-                      moment(
-                        comment.createdAt
-                      ).fromNow()
+            <X
 
-                    }
+              onClick={onClose}
+
+              className="cursor-pointer"
+
+            />
+
+          </div>
+
+          <div className="px-5 py-3 border-b">
+
+            <p className="text-gray-700 whitespace-pre-line">
+
+              {post.content}
+
+            </p>
+
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-5 space-y-4">
+
+            {
+
+              comments.length === 0 && (
+
+                <div className="flex justify-center items-center h-32">
+
+                  <p className="text-gray-400">
+
+                    No comments yet.
 
                   </p>
 
                 </div>
 
-              </div>
+              )
 
-            ))
-
-          }
-
-        </div>
-
-        <div className="flex gap-2 mt-5">
-
-          <input
-
-            value={text}
-
-            onChange={(e) =>
-              setText(e.target.value)
             }
 
-            placeholder="Write a comment..."
+            {
 
-            className="flex-1 border rounded-lg px-4 py-2 outline-none"
+              comments.map((comment) => (
 
-          />
+                <div
 
-          <button
+                  key={comment._id}
 
-            onClick={handleComment}
+                  className="flex gap-3"
 
-            className="bg-indigo-600 text-white px-5 rounded-lg hover:bg-indigo-700"
+                >
 
-          >
+                  <img
 
-            Post
+                    src={
 
-          </button>
+                      comment.user?.profile_picture ||
+
+                      `https://ui-avatars.com/api/?name=${comment.user?.full_name}`
+
+                    }
+
+                    className="w-10 h-10 rounded-full object-cover"
+
+                  />
+
+                  <div className="flex-1">
+
+                    <div className="flex items-center gap-2">
+
+                      <p className="font-semibold text-sm">
+
+                        {
+
+                          comment.user?.full_name
+
+                        }
+
+                      </p>
+
+                      <p className="text-xs text-gray-400">
+
+                        {
+
+                          moment(
+
+                            comment.createdAt
+
+                          ).fromNow()
+
+                        }
+
+                      </p>
+
+                    </div>
+
+                    <p className="text-sm text-gray-700 mt-1">
+
+                      {comment.text}
+
+                    </p>
+
+                  </div>
+
+                </div>
+
+              ))
+
+            }
+
+          </div>
+
+          {/* ACTION BAR */}
+
+          <div className="border-t border-b px-5 py-3">
+
+            <div className="flex items-center gap-5">
+
+              <div className="flex items-center gap-2">
+
+                <Heart className="w-6 h-6 cursor-pointer hover:text-red-500"/>
+
+                <p className="text-sm">
+
+                  {post.likes?.length || 0}
+
+                </p>
+
+              </div>
+
+              <div className="flex items-center gap-2">
+
+                <MessageCircle className="w-6 h-6"/>
+
+                <p className="text-sm">
+
+                  {comments.length}
+
+                </p>
+
+              </div>
+
+              <div className="flex items-center gap-2">
+
+                <Send className="w-6 h-6"/>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          {/* EMOJIS */}
+
+          <div className="px-5 py-3 flex gap-2 overflow-x-auto">
+
+            {
+
+              emojis.map((emoji,index)=>(
+
+                <button
+
+                  key={index}
+
+                  onClick={()=>
+
+                    setText(
+
+                      (prev)=>prev+emoji
+
+                    )
+
+                  }
+
+                  className="text-2xl hover:scale-125 transition"
+
+                >
+
+                  {emoji}
+
+                </button>
+
+              ))
+
+            }
+
+          </div>
+
+          {/* COMMENT INPUT */}
+
+          <div className="border-t p-4 flex gap-3">
+
+            <input
+
+              value={text}
+
+              onChange={(e)=>
+
+                setText(e.target.value)
+
+              }
+
+              placeholder="Write a comment..."
+
+              className="flex-1 border rounded-full px-5 py-3 outline-none focus:border-indigo-500"
+
+            />
+
+            <button
+
+              onClick={handleComment}
+
+              className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-full px-6 py-3 transition"
+
+            >
+
+              Post
+
+            </button>
+
+          </div>
 
         </div>
 

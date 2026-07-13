@@ -24,7 +24,7 @@ router.get("/", getAllPosts);
 // ✅ GET USER POSTS
 // ======================================
 
-router.get("/user/:clerkId", getUserPosts);
+router.get("/user/:id", getUserPosts);
 
 // ======================================
 // ✅ LIKE POST

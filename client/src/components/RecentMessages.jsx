@@ -28,7 +28,7 @@ const RecentMessages = () => {
           {messages.map((message) => (
             <Link
               key={message._id}
-              to={`/messages/${message.from_user_id._id}`}
+              to={`/messages/${message.from_user_id.clerkId}`}
               className="flex items-start gap-2 py-2 hover:bg-slate-100 rounded-md px-2"
             >
               <img

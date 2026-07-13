@@ -25,8 +25,21 @@ const Profile = () => {
     try {
       setLoading(true);
 
+      const token = await getToken();
+
       const userResponse = await axios.get(
-        `${BACKEND_URL}/api/user/all`
+        `${BACKEND_URL}/api/user/all`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log(
+        userResponse.data.users.find(
+          (u) => u._id === profileId
+        )
       );
 
       if (!userResponse.data.success) {
@@ -38,7 +51,9 @@ const Profile = () => {
 
       if (profileId) {
         foundUser = userResponse.data.users.find(
-          (u) => u._id === profileId
+          (u) =>
+            u._id === profileId ||
+            u.clerkId === profileId
         );
       } else {
         foundUser = userResponse.data.users.find(
@@ -50,6 +65,8 @@ const Profile = () => {
         setLoading(false);
         return;
       }
+
+      console.log("FOUND USER:", foundUser);
 
       setUser(foundUser);
 

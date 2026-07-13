@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   useNavigate,
 } from "react-router-dom";
@@ -19,25 +19,30 @@ const UserCard = ({ user }) => {
 
   const { getToken } = useAuth();
 
-  const [isFollowing, setIsFollowing] = useState(
-    user.isFollowing || false
-  );
+  const [isFollowing, setIsFollowing] = useState(false);
+
+  useEffect(() => {
+    setIsFollowing(user?.isFollowing || false);
+  }, [user]);
 
   const isConnected = user.isConnected || false;
 
   const handleFollow = async (e) => {
-    
-    console.log("FOLLOW CLICKED");
-    
     e.stopPropagation();
 
+    console.log("FOLLOW CLICKED");
+
     try {
+      console.log("Getting token...");
 
       const token = await getToken();
 
-      const endpoint = isFollowing
-        ? "unfollow"
-        : "follow";
+      console.log("TOKEN:", token);
+
+      const endpoint = isFollowing ? "unfollow" : "follow";
+
+      console.log("ENDPOINT:", endpoint);
+      console.log("USER ID:", user._id);
 
       const { data } = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/api/user/${endpoint}`,
@@ -51,12 +56,14 @@ const UserCard = ({ user }) => {
         }
       );
 
+      console.log("RESPONSE:", data);
+
       if (data.success) {
         setIsFollowing(!isFollowing);
       }
 
     } catch (error) {
-      console.log(error);
+      console.log("ERROR:", error);
     }
   };
 
@@ -64,7 +71,7 @@ const UserCard = ({ user }) => {
     e.stopPropagation();
 
     if (isConnected) {
-      navigate(`/messages/${user._id}`);
+      navigate(`/messages/${user.clerkId}`)
     }
   };
 
@@ -72,6 +79,8 @@ const UserCard = ({ user }) => {
     e.stopPropagation();
     navigate(`/profile/${user._id}`);
   };
+
+  console.log(JSON.stringify(user, null, 2));
 
   return (
     <div

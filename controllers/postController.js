@@ -9,14 +9,14 @@ import cloudinary from "../configs/cloudinary.js";
 export const createPost = async (req, res) => {
   try {
     const authData = await req.auth();
-const clerkId = authData?.userId;
+    const clerkId = authData?.userId;
 
-if (!clerkId) {
-  return res.status(401).json({
-    success: false,
-    message: "Unauthorized",
-  });
-}
+    if (!clerkId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
 
     if (!clerkId) {
       return res.status(401).json({
@@ -130,35 +130,28 @@ export const getAllPosts = async (req, res) => {
 
 export const getUserPosts = async (req, res) => {
   try {
-    const { clerkId } = req.params;
 
-    const user = await User.findOne({
-      clerkId,
-    });
-
-    if (!user) {
-      return res.json({
-        success: false,
-        message: "User not found",
-      });
-    }
+    const { id } = req.params;
 
     const posts = await Post.find({
-      user: user._id,
+      user: id,
     })
       .populate("user")
       .sort({
         createdAt: -1,
       });
 
-    res.json({
+    return res.json({
       success: true,
       posts,
     });
+
   } catch (error) {
-    res.json({
+
+    return res.json({
       success: false,
       message: error.message,
     });
+
   }
 };

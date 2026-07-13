@@ -25,7 +25,7 @@ router.post("/sync", syncUser);
 router.get("/me", protect, getUserData);
 
 // ✅ GET ALL USERS
-router.get("/all", getAllUsers);
+router.get("/all", protect, getAllUsers);
 
 // ✅ USERS AVAILABLE FOR CHAT
 router.get("/chat-users", protect, getFollowingUsers);

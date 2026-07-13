@@ -18,7 +18,7 @@ import {
 
 import moment from "moment";
 
-import { useUser } from "@clerk/clerk-react";
+import { useUser, useAuth } from "@clerk/clerk-react";
 
 import toast from "react-hot-toast";
 
@@ -30,6 +30,7 @@ const Chatbox = () => {
   const { userId } = useParams();
 
   const { user } = useUser();
+  const { getToken } = useAuth();
 
   const [input, setInput] =
     useState("");
@@ -65,20 +66,13 @@ const Chatbox = () => {
 
     const fetchUser = async () => {
 
-      // AI BOT
       if (userId === "ai-bot") {
 
         setOtherUser({
-
-          full_name:
-            "Velora AI",
-
-          email:
-            "AI Assistant",
-
+          full_name: "Velora AI",
+          email: "AI Assistant",
           profile_picture:
             "https://api.dicebear.com/7.x/bottts/svg?seed=Velora",
-
         });
 
         return;
@@ -87,23 +81,30 @@ const Chatbox = () => {
 
       try {
 
-        const response =
-          await fetch(
-            `${API_URL}/api/user/all`
-          );
+        const token = await getToken();
 
-        const data =
-          await response.json();
+        const response = await fetch(
+          `${API_URL}/api/user/all`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const data = await response.json();
+
+        console.log("USER API:", data);
 
         if (data.success) {
 
-          const foundUser =
-            data.users.find(
-              (u) =>
-                u.clerkId === userId
-            );
+          const foundUser = data.users.find(
+            (u) => u.clerkId === userId
+          );
 
-          setOtherUser(foundUser);
+          console.log("FOUND USER:", foundUser);
+
+          setOtherUser(foundUser || null);
 
         }
 
@@ -115,9 +116,11 @@ const Chatbox = () => {
 
     };
 
-    fetchUser();
+    if (userId) {
+      fetchUser();
+    }
 
-  }, [userId]);
+  }, [userId, getToken]);
 
   // LOAD OLD MESSAGES
   useEffect(() => {
@@ -564,7 +567,11 @@ const Chatbox = () => {
 
           <input
             type="text"
-            placeholder={`Message ${otherUser?.full_name}...`}
+            placeholder={
+              otherUser
+                ? `Message ${otherUser.full_name}...`
+                : "Type a message..."
+            }
             value={input}
             onChange={(e) =>
               setInput(

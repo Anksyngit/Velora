@@ -26,7 +26,7 @@ const PostCard = ({ post }) => {
   // FIXED: use post.likes instead of post.likes_count
   const [likes, setLikes] = useState(post.likes || []);
 
-  const [openComments, setOpenComments] =
+  const [openPost, setOpenPost] =
     useState(false);
 
   const postwithHashtags = post.content
@@ -93,13 +93,13 @@ const PostCard = ({ post }) => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow p-4 space-y-4 w-full max-w-2xl">
+    <div className="bg-white rounded-xl shadow p-4 space-y-4 w-full max-w-2xl hover:shadow-lg transition">
 
       {/* USER */}
 
       <div
         onClick={() =>
-          navigate(`/profile/${postUser?.clerkId}`)
+          navigate(`/profile/${postUser?._id}`)
         }
         className="inline-flex items-center gap-3 cursor-pointer"
       >
@@ -131,7 +131,8 @@ const PostCard = ({ post }) => {
 
       {post.content && (
         <div
-          className="text-gray-800 text-sm whitespace-pre-line"
+          onClick={() => setOpenPost(true)}
+          className="text-gray-800 text-sm whitespace-pre-line cursor-pointer"
           dangerouslySetInnerHTML={{
             __html: postwithHashtags,
           }}
@@ -154,7 +155,8 @@ const PostCard = ({ post }) => {
                 key={index}
                 src={imageUrl}
                 alt=""
-                className={`w-full h-48 object-cover rounded-lg ${
+                onClick={() => setOpenPost(true)}
+                className={`w-full h-48 object-cover rounded-lg cursor-pointer transition hover:opacity-95 ${
                   images.length === 1
                     ? "col-span-2 h-auto"
                     : ""
@@ -193,7 +195,7 @@ const PostCard = ({ post }) => {
           <MessageCircle
 
             onClick={() =>
-              setOpenComments(true)
+              setOpenPost(true)
             }
 
             className="w-5 h-5 cursor-pointer hover:text-indigo-500"
@@ -220,10 +222,10 @@ const PostCard = ({ post }) => {
 
       <CommentModal
 
-        open={openComments}
+        open={openPost}
 
         onClose={() =>
-          setOpenComments(false)
+          setOpenPost(false)
         }
 
         post={post}

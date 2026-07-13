@@ -31,6 +31,9 @@ const Discover = () => {
         }
       );
 
+      console.log("DISCOVER RESPONSE:", data.users);
+      console.log("FIRST USER:", data.users[0]);
+
       if (data.success) {
         setUsers(data.users);
       } else {

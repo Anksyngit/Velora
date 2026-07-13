@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import moment from "moment";
+import axios from "axios";
 
 import {
   Calendar,
@@ -7,9 +8,11 @@ import {
   MapPin,
   UserPlus,
   UserCheck,
+  MessageCircle,
 } from "lucide-react";
 
-import { useUser } from "@clerk/clerk-react";
+import { useUser, useAuth } from "@clerk/clerk-react";
+import { useNavigate } from "react-router-dom";
 
 const ProfileInfo = ({
   user,
@@ -20,17 +23,56 @@ const ProfileInfo = ({
   setActiveTab,
 }) => {
   const { user: clerkUser } = useUser();
+  const { getToken } = useAuth();
+  const navigate = useNavigate();
 
   // Is this my own profile?
   const isOwnProfile =
     !profileId || clerkUser?.id === user.clerkId;
 
-  // Temporary until Follow API is connected
   const [isFollowing, setIsFollowing] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
 
-  const handleFollow = () => {
-    // TODO: Connect Follow API
-    setIsFollowing((prev) => !prev);
+  useEffect(() => {
+    setIsFollowing(user?.isFollowing || false);
+    setIsConnected(user?.isConnected || false);
+  }, [user]);
+
+  const handleFollow = async () => {
+    console.log("PROFILE FOLLOW CLICKED");
+
+    try {
+      const token = await getToken();
+
+      console.log("TOKEN:", token);
+
+      const endpoint = isFollowing ? "unfollow" : "follow";
+
+      console.log("ENDPOINT:", endpoint);
+      console.log("USER ID:", user._id);
+
+      const { data } = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/user/${endpoint}`,
+        { id: user._id },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log("RESPONSE:", data);
+
+      if (data.success) {
+        setIsFollowing(!isFollowing);
+
+        if (data.connection) {
+          setIsConnected(true);
+        }
+      }
+    } catch (err) {
+      console.error("PROFILE FOLLOW ERROR:", err);
+    }
   };
 
   return (
@@ -89,26 +131,43 @@ const ProfileInfo = ({
 
             ) : (
 
-              <button
-                onClick={handleFollow}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition mt-4 md:mt-0 text-white ${
-                  isFollowing
-                    ? "bg-gray-400"
-                    : "bg-indigo-600 hover:bg-indigo-700"
-                }`}
-              >
-                {isFollowing ? (
-                  <>
-                    <UserCheck className="w-4 h-4" />
-                    Following
-                  </>
-                ) : (
-                  <>
-                    <UserPlus className="w-4 h-4" />
-                    Follow
-                  </>
+              <div className="flex gap-2 mt-4 md:mt-0">
+
+                <button
+                  onClick={() => {
+                    console.log("PROFILE BUTTON PRESSED");
+                    handleFollow();
+                  }}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition text-white ${
+                    isFollowing
+                      ? "bg-gray-400"
+                      : "bg-indigo-600 hover:bg-indigo-700"
+                  }`}
+                >
+                  {isFollowing ? (
+                    <>
+                      <UserCheck className="w-4 h-4" />
+                      Following
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="w-4 h-4" />
+                      Follow
+                    </>
+                  )}
+                </button>
+
+                {isConnected && (
+                  <button
+                    onClick={() => navigate(`/messages/${user.clerkId}`)}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    Message
+                  </button>
                 )}
-              </button>
+
+              </div>
 
             )}
 

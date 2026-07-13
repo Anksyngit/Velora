@@ -117,16 +117,48 @@ export const getUserData = async (req, res) => {
 
 export const getAllUsers = async (req, res) => {
   try {
+    const clerkId = req.auth.userId;
+
+    const currentUser = await User.findOne({ clerkId });
+
+    if (!currentUser) {
+      return res.json({
+        success: false,
+        message: "User not found",
+      });
+    }
 
     const users = await User.find();
 
+    const updatedUsers = users.map((user) => ({
+      ...user.toObject(),
+
+      isFollowing: currentUser.following.some(
+        (id) => id.toString() === user._id.toString()
+      ),
+
+      isConnected: currentUser.connections.some(
+        (id) => id.toString() === user._id.toString()
+      ),
+    }));
+
+    console.log(
+      updatedUsers.map((u) => ({
+        name: u.full_name,
+        id: u._id.toString(),
+        isFollowing: u.isFollowing,
+      }))
+    );
+
+    // 👇 ADD THIS
+    console.log(updatedUsers);
+
     res.json({
       success: true,
-      users,
+      users: updatedUsers,
     });
 
   } catch (error) {
-
     res.json({
       success: false,
       message: error.message,
@@ -245,8 +277,12 @@ export const updateUserData = async (req, res) => {
 
 export const discoverUsers = async (req, res) => {
   try {
+    const clerkId = req.auth.userId;
 
-    const clerkId = req.auth?.userId;
+    const currentUser = await User.findOne({ clerkId });
+
+    console.log("CURRENT USER FOLLOWING:");
+    console.dir(currentUser.following, { depth: null });
 
     const { input } = req.body;
 
@@ -259,18 +295,30 @@ export const discoverUsers = async (req, res) => {
       ],
     });
 
-    const filtered = users.filter(
-      (user) => user.clerkId !== clerkId
-    );
+    const filtered = users
+      .filter((user) => user.clerkId !== clerkId)
+      .map((user) => ({
+        ...user.toObject(),
 
-    res.json({
+        isFollowing: currentUser.following.some(
+          (id) => id.toString() === user._id.toString()
+        ),
+
+        isConnected: currentUser.connections.some(
+          (id) => id.toString() === user._id.toString()
+        ),
+      }));
+
+    console.log("FILTERED USERS:");
+    console.dir(filtered, { depth: null });
+
+    return res.json({
       success: true,
       users: filtered,
     });
 
   } catch (error) {
-
-    res.json({
+    return res.json({
       success: false,
       message: error.message,
     });
@@ -283,8 +331,13 @@ export const discoverUsers = async (req, res) => {
 
 export const followUsers = async (req, res) => {
   try {
+    console.log("===== FOLLOW CONTROLLER HIT =====");
+
     const clerkId = req.auth?.userId;
     const { id } = req.body;
+
+    console.log("Current Clerk:", req.auth.userId);
+    console.log("Target ID:", req.body.id);
 
     const user = await User.findOne({ clerkId });
     const toUser = await User.findById(id);
